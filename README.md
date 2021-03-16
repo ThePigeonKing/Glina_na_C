@@ -1,6 +1,6 @@
 # Glina_na_C
 Labs and tests
 
-*COMPLETED*: # 0; 1
+*Uploaded*: ## 1, 0_5a
 
-*TO_DO*: # 0,5a; 0,5b
+*TO_DO*: ## 0_5b, 0
