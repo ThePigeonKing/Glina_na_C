@@ -18,7 +18,6 @@ int xor(int a, int b);
 
 int main(int argc, char const *argv[]) {
 
-  int response = 777;
   char* arr;
   char* delim = " ";
 
@@ -37,23 +36,26 @@ int main(int argc, char const *argv[]) {
 
 
 char* getLine(char *arr){   // получение цельной строки
+	print_debug("%s\n", "GETLINE");
   int rsp, space = 100;
   arr = (char *)malloc(space * sizeof(char));
   char *tmp;
   rsp = scanf("%99[^\n]", arr);
   print_debug("READ LINE - %s\n", arr);
   print_debug("RSP1 = %d\n", rsp);
-  while (rsp == 1){
-    space += 99;
-    print_debug("RSP2 = %d, SPACE = %d\n", rsp, space);
-    tmp = realloc(arr, space * sizeof(char)); // выделяем ещё место
-    if (tmp == NULL){
-      rsp = -1;
-      break;
-    }
-    rsp = scanf("%99[^\n]", &arr[space - 100]);
-    print_debug("READ LINE - %s\n", arr);
-  }
+	if (strlen(arr) == 99){
+		  while (rsp == 1){
+		    space += 99;
+		    print_debug("RSP2 = %d, SPACE = %d\n", rsp, space);
+		    tmp = realloc(arr, space * sizeof(char)); // выделяем ещё место
+		    if (tmp == NULL){
+		      rsp = -1;
+		      break;
+		    }
+		    rsp = scanf("%99[^\n]", &arr[space - 100]);
+		    print_debug("READ LINE - %s\n", arr);
+		  }
+	}
 
   scanf("%*1[\n]");
   if (rsp < 0){
@@ -66,6 +68,7 @@ char* getLine(char *arr){   // получение цельной строки
 
 
 void split_line(char *arr, char *delim){
+	print_debug("%s\n", "SPLIT_LINE");
   int num, counter = 0;
   char *ptr = strtok(arr, delim);
 
@@ -73,6 +76,7 @@ void split_line(char *arr, char *delim){
     print_debug("LINE - %s \n", ptr);
     num = convert_to_int(ptr); // конвертирование
     if (num != -1){
+			print_debug("%s\n", "Y");
       printf("| %c ", (char)xor(num, (int)KEY[counter%KEYLEN]));
       counter++;
     } else {
@@ -82,7 +86,7 @@ void split_line(char *arr, char *delim){
     ptr = strtok(NULL, delim);
   }
 
-  printf("\n");
+  printf("|\n");
 }
 
 
