@@ -43,6 +43,10 @@ int main() {
   printf("Финальная матрица:\n");
   Matr_out(new_matr);
 
+	Matr_free(&matr);
+	Matr_free(&new_matr);
+
+
   return 0;
 }
 
@@ -81,9 +85,9 @@ int Matr_in(Matrix *rm){
   double *ptr;
 
   do{
-      printf("%s\n", err);
+      printf("%s", err);
       printf("Enter number of lines -->  ");
-      err = "Wrong input! Try again..";
+      err = "Wrong input! Try again..\n";
       if(getInt(&m) == 0)
         return 0; //EOF
   } while (m < 1);
@@ -98,7 +102,7 @@ int Matr_in(Matrix *rm){
     // память под каждую строку матрицы
     do{
       print_debug("%s\n", err);
-      print_debug("Enter amount of elements in line %d ---> ", i +1);
+      printf("Enter amount of elements in line %d ---> ", i +1);
       err = "Wrong input! Try again..";
       if (getInt(&m) == 0){
         //очищение памяти
