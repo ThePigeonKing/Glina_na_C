@@ -14,8 +14,11 @@ typedef struct Node
     Info *info;
     struct Node *left;
     struct Node *right;
-    //struct Node *parent;
+
 } Node;
+
+//! сделать изменение root внутри функции, без возврата в main
+//! сделать printf только в main
 
 enum CODES{   // статус коды для отлова ошибок
     fail,

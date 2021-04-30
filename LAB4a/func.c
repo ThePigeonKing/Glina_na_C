@@ -6,6 +6,8 @@
 #include "structs.h"
 #include "utils.h"
 #include "func.h"
+#include "work_with_files.h"
+
 
 char* getLine(){    // считывание строки произвольной длины
 
@@ -76,26 +78,20 @@ void print_err(char *msg){
 }
 
 enum CODES getKey(char **arr){
+    
     *arr = getLine();
-    if (*arr == NULL){
-        print_err("Error in getKey!");
+
+    if (NULL == *arr){
+        print_err("Error in getKey!\n");
         return crit_error;
     }
 
     return success;
 }
 
-void print_commands(){
-    printf(ANSI_COLOR_GREEN"1. Add node\n"ANSI_COLOR_RESET);
-    printf(ANSI_COLOR_GREEN"2. Find\n"ANSI_COLOR_RESET);
-    printf(ANSI_COLOR_GREEN"0. Shut down\n"ANSI_COLOR_RESET);
-
-    printf("\n");
-}
-
 void print_node(Node *node, char* msg){    // вывод на экран node
     printf("%s", msg);
-    printf(ANSI_COLOR_RED"INFO:\n string: %s\n num1: %lf    num2: %lf"ANSI_COLOR_RESET, \
+    printf(ANSI_COLOR_RED"INFO:\n string: %s\n num1: %.3lf    num2: %.3lf"ANSI_COLOR_RESET, \
         node->info->string, node->info->num1, node->info->num2);
 
     return;
@@ -126,6 +122,15 @@ void postorder_print(Node *p, int indent){  // очень кривой пока�
     }
 }
 
+void directorder_print(Node *p){
+    if (p == NULL)
+        return;
+
+    directorder_print(p->left);
+    printf(ANSI_COLOR_GREEN"%s "ANSI_COLOR_RESET, p->key);
+    directorder_print(p->right);
+}
+
 void erase_tree(Node *root){  // очищение всего дерева
 
     if (root == NULL){
@@ -139,7 +144,7 @@ void erase_tree(Node *root){  // очищение всего дерева
     }
     free(root->info->string);
     free(root->info);
-    free(root->key);
+    //free(root->key);  //!шо?!
     free(root);
 
 }
@@ -153,6 +158,26 @@ Node *find_by_key(Node *root, char *key){   // поиск по ключу
     else
         return find_by_key(root->right, key);
 }
+
+//TODO
+// Node *find_next_bigger(Node *root, char *key){   // поиск следующего по величине
+    
+//     Node *found = NULL, *last = NULL;
+
+//     while (root != NULL){
+
+//         if (strcmp(key, root->key) < 0){
+//             last = root;
+//             root = root->left;
+//         }
+
+//     }
+// }
+
+//TODO
+// Node *find_for_rev_order(Node *root, char *key){    // для обратного порядка ключей
+
+// }
 
 Node* initialize(char *key_to_init){
     enum CODES stat = hold;
@@ -239,7 +264,7 @@ Node* insert(Node *root, char *key, Node **returnable){
                 root2 = root2->right;
 
             } else if (comparison == 0){    // совпал ключ
-                printf("Replacing data\n");
+                print_err("Replacing data\n");
                 *returnable = new_node;
                 new_node->key = root2->key;
                 new_node->info = root2->info;
@@ -279,6 +304,68 @@ Node* insert(Node *root, char *key, Node **returnable){
     return NULL;
 }
 
+Node *minValue(Node* root){     // поиск минимального значения
+
+    Node *current = root;
+    while(current != NULL && current->left != NULL)
+        current = current->left;
+
+    return current;
+}
+
+Node* del_by_key(Node *root, char *key_to_del){    // удаление ячейки по ключу
+
+    if (root == NULL){
+        print_err("Err\n");
+        return root;
+    }
+
+    //*левое поддерево
+    if (strcmp(key_to_del, root->key) < 0){
+        root->left = del_by_key(root->left, key_to_del);
+    }
+
+    //*правое поддерево
+    else if (strcmp(key_to_del, root->key) > 0){
+        root->right = del_by_key(root->right, key_to_del);
+    } else {
+        //*когда только 1 или нет подуровней
+        if (NULL == root->left){
+            Node *temp = root->right;
+            free(root->info->string);
+            free(root->info);
+            free(root);
+            return temp;
+        }
+        else if (NULL == root->right){
+            Node *temp = root->left;
+            free(root->info->string);
+            free(root->info);
+            free(root);
+            return temp;
+        }
+
+        //*минимальное в правом поддереве
+        Node *temp = minValue(root->right);
+        root->key = temp->key;
+        root->info = temp->info;
+
+        root->right = del_by_key(root->right, temp->key);
+    }
+    return root;
+}
+
+void print_commands(){
+    printf(ANSI_COLOR_GREEN"1. Add node\n"ANSI_COLOR_RESET);
+    printf(ANSI_COLOR_GREEN"2. Find by key\n"ANSI_COLOR_RESET);
+    printf(ANSI_COLOR_GREEN"3. Find any bigger\n"ANSI_COLOR_RESET);
+    printf(ANSI_COLOR_GREEN"4. Delete\n"ANSI_COLOR_RESET);
+    //printf(ANSI_COLOR_GREEN"4. Find (Task)\n"ANSI_COLOR_RESET);
+    printf(ANSI_COLOR_GREEN"5. Read from file\n"ANSI_COLOR_RESET);
+    printf(ANSI_COLOR_GREEN"0. Shut down\n"ANSI_COLOR_RESET);
+
+    printf("\n");
+}
 
 void mainloop(){
     int command, rsp;
@@ -288,6 +375,7 @@ void mainloop(){
 
     while (1){
         print_commands();
+        printf("Choose one -->");
         rsp = scanf("%d", &command);
         if (rsp < 0){
             printf("EOF found!\n");
@@ -315,18 +403,21 @@ void mainloop(){
             if (rtrnbl->info != NULL){
                 print_err("Some data has been replaced");
                 print_node(rtrnbl, "Replaced data--->\n");
+                printf("\n");
 
                 free(rtrnbl->info->string);
                 free(rtrnbl->info);
-                free(rtrnbl->key);
-                rtrnbl->key = NULL;
                 rtrnbl->info = NULL;
+                
+                free(key);
+                
             }
             break;
         
         case 2:     // find
             printf("Current tree--->\n");
-            postorder_print(root, 0);
+            directorder_print(root);
+            printf("\n");
             printf("Enter key to watch for: ");
             stat = getKey(&key);
             if (stat == crit_error){    //!MemError/EOF
@@ -339,6 +430,39 @@ void mainloop(){
                 print_node(found, "Found item--->\n");
             else
                 print_err("Element with key not found!");
+            printf("\n");
+            free(key);
+            break;
+
+        case 3: // поиск следующего по величине
+
+            print_err("Currently doesn't work\n");
+            
+            break;
+        
+        case 4:     // del_by_key
+            printf("Current tree--->\n");
+            directorder_print(root);
+            printf("\n");
+            printf("Enter key to delete: ");
+            stat = getKey(&key);
+            if (stat == crit_error){    //!MemError/EOF
+                erase_tree(root);
+                root = NULL;
+                return;
+            }
+            root = del_by_key(root, key);
+            print_err("New tree--->");
+            directorder_print(root);
+            printf("\n");
+            free(key);
+            break;
+
+        case 5: // чтение из файла
+
+            erase_tree(root);
+            
+            root = read_from_file();
 
             break;
 
