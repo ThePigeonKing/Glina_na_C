@@ -45,6 +45,7 @@ char* getLine(){    // считывание строки произвольно�
         return NULL;
     }
     
+    
     return line;
 }
 
@@ -91,35 +92,22 @@ enum CODES getKey(char **arr){
 
 void print_node(Node *node, char* msg){    // вывод на экран node
     printf("%s", msg);
-    printf(ANSI_COLOR_RED"INFO:\n string: %s\n num1: %.3lf    num2: %.3lf"ANSI_COLOR_RESET, \
-        node->info->string, node->info->num1, node->info->num2);
+    printf(ANSI_COLOR_RED"INFO for key \"%s\"\n string: \"%s\"      num1: %.3lf     num2: %.3lf"ANSI_COLOR_RESET, \
+        node->key, node->info->string, node->info->num1, node->info->num2);
 
     return;
 }
 
-void postorder_print(Node *p, int indent){  // очень кривой показ дерева
-
-    if (p != NULL){
-        if (p->right != NULL){
-            postorder_print(p->right, indent+4);
-        }
-        if (indent != 0){
-            for (int i = 0; i < indent; ++i)
-                printf(" ");
-        }
-        if (p->right){
-            printf(" /\n");
-            for (int i = 0; i < indent; ++i)
-                printf(" ");
-        }
-        printf("%s\n", p->key);
-        if (p->left){
-            for (int i = 0; i < indent+1; ++i)
-                printf(" ");
-            printf("\\\n");
-            postorder_print(p->left, indent+4);
+void postorder_print(Node *p, char *lim){  // вывод в обратном обходе + ограничение
+    if (NULL != p){
+        postorder_print(p->left, lim);
+        postorder_print(p->right, lim);
+        int compar = strcmp(lim, p->key);
+        if (compar > 0){
+            printf(ANSI_COLOR_RED"%s "ANSI_COLOR_RESET, p->key);
         }
     }
+    
 }
 
 void directorder_print(Node *p){
@@ -144,7 +132,7 @@ void erase_tree(Node *root){  // очищение всего дерева
     }
     free(root->info->string);
     free(root->info);
-    //free(root->key);  //!шо?!
+    free(root->key);  //!шо?! дада я даун
     free(root);
 
 }
@@ -159,25 +147,41 @@ Node *find_by_key(Node *root, char *key){   // поиск по ключу
         return find_by_key(root->right, key);
 }
 
-//TODO
-// Node *find_next_bigger(Node *root, char *key){   // поиск следующего по величине
+Node *find_first_bigger(Node *root, char *key, Node* ptr){   // поиск следующего по величине
     
-//     Node *found = NULL, *last = NULL;
+    if (NULL == root){
+        return NULL;
+    }
+    if (strcmp(key, root->key) < 0){
 
-//     while (root != NULL){
+        ptr = root;
+        if (NULL == root->left){
+            return ptr;
+        }
+        return find_first_bigger(root->left, key, ptr);
+    } else if (strcmp(key, root->key) > 0){
+        if (NULL == root->right){
+            return ptr;
+        }
+        return find_first_bigger(root->right, key, ptr);
+    } else if (strcmp(key, root->key) == 0){
 
-//         if (strcmp(key, root->key) < 0){
-//             last = root;
-//             root = root->left;
-//         }
+        if (root->right != NULL){
+            root = root->right;
+            while(root->left != NULL){
+                root = root->left;
+            }
+            return root;
+        } else {
 
-//     }
-// }
+            return ptr;
+        }
+    }
 
-//TODO
-// Node *find_for_rev_order(Node *root, char *key){    // для обратного порядка ключей
+    //print_err("Something went wrong in find_first_bigger\n");
+    return NULL;
+}
 
-// }
 
 Node* initialize(char *key_to_init){
     enum CODES stat = hold;
@@ -313,55 +317,76 @@ Node *minValue(Node* root){     // поиск минимального знач�
     return current;
 }
 
+void erase_node(Node *root, int indicator){
+    if (indicator == 1){
+        free(root->key);
+    }
+    free(root->info->string);
+    free(root->info);
+    free(root);
+}
+
 Node* del_by_key(Node *root, char *key_to_del){    // удаление ячейки по ключу
+
+    Node *tmp = NULL;
+    Info *inf_buf = NULL;
+    static int depth = 0;
 
     if (root == NULL){
         print_err("Err\n");
         return root;
     }
 
-    //*левое поддерево
-    if (strcmp(key_to_del, root->key) < 0){
+    if (strcmp(key_to_del, root->key) < 0){ // влево
+
         root->left = del_by_key(root->left, key_to_del);
-    }
+    } else if (strcmp(key_to_del, root->key) > 0){  // вправо
 
-    //*правое поддерево
-    else if (strcmp(key_to_del, root->key) > 0){
         root->right = del_by_key(root->right, key_to_del);
+    } else if (NULL != root->left && NULL != root->right){
+        tmp = minValue(root->right);
+        free(root->key);
+        root->key = tmp->key;
+        inf_buf = root->info;
+        root->info = tmp->info;
+        tmp->info = inf_buf;
+        ++depth;
+        root->right = del_by_key(root->right, root->key);
     } else {
-        //*когда только 1 или нет подуровней
-        if (NULL == root->left){
-            Node *temp = root->right;
-            free(root->info->string);
-            free(root->info);
-            free(root);
-            return temp;
-        }
-        else if (NULL == root->right){
-            Node *temp = root->left;
-            free(root->info->string);
-            free(root->info);
-            free(root);
-            return temp;
-        }
 
-        //*минимальное в правом поддереве
-        Node *temp = minValue(root->right);
-        root->key = temp->key;
-        root->info = temp->info;
-
-        root->right = del_by_key(root->right, temp->key);
+        if (NULL != root->left){
+            tmp = root;
+            root = root->left;
+            if (depth == 0)
+                erase_node(tmp, 1);
+            else
+                erase_node(tmp, 0);
+        } else if (NULL != root->right){
+            tmp = root;
+            root = root->right;
+            if (depth == 0)
+                erase_node(tmp, 1);
+            else
+                erase_node(tmp, 0);
+        } else {
+            if (depth == 0)
+                erase_node(root, 1);
+            else
+                erase_node(root, 0);
+            root = NULL;
+        }
     }
+    print_debug("%s", "FINALE IN DEL!\n");
     return root;
 }
 
 void print_commands(){
     printf(ANSI_COLOR_GREEN"1. Add node\n"ANSI_COLOR_RESET);
     printf(ANSI_COLOR_GREEN"2. Find by key\n"ANSI_COLOR_RESET);
-    printf(ANSI_COLOR_GREEN"3. Find any bigger\n"ANSI_COLOR_RESET);
+    printf(ANSI_COLOR_GREEN"3. Find first bigger\n"ANSI_COLOR_RESET);
     printf(ANSI_COLOR_GREEN"4. Delete\n"ANSI_COLOR_RESET);
-    //printf(ANSI_COLOR_GREEN"4. Find (Task)\n"ANSI_COLOR_RESET);
     printf(ANSI_COLOR_GREEN"5. Read from file\n"ANSI_COLOR_RESET);
+    printf(ANSI_COLOR_GREEN"6. Postorder print with upper lim\n"ANSI_COLOR_RESET);
     printf(ANSI_COLOR_GREEN"0. Shut down\n"ANSI_COLOR_RESET);
 
     printf("\n");
@@ -415,6 +440,10 @@ void mainloop(){
             break;
         
         case 2:     // find
+            if (NULL == root){
+                print_err("Can't find anything in empty tree!");
+                break;
+            }
             printf("Current tree--->\n");
             directorder_print(root);
             printf("\n");
@@ -435,9 +464,21 @@ void mainloop(){
             break;
 
         case 3: // поиск следующего по величине
+            printf("Enter key find bigger for: ");
+            stat = getKey(&key);
+            if (stat == crit_error){    //!MemError/EOF
+                free(key);
+                erase_tree(root);
+                return;
+            }
+            found = find_first_bigger(root, key, NULL);
+            if (found != NULL){
+                print_node(found, "Next bigger ->\n");
+            } else {
+                print_err("Element not found!\n");
+            }
 
-            print_err("Currently doesn't work\n");
-            
+            free(key);
             break;
         
         case 4:     // del_by_key
@@ -463,7 +504,18 @@ void mainloop(){
             erase_tree(root);
             
             root = read_from_file();
+            break;
 
+        case 6:
+            printf("Enter upper limit for printing --> ");
+            stat = getKey(&key);
+            if (stat == crit_error){    //!MemError/EOF
+                erase_tree(root);
+                root = NULL;
+                return;
+            }
+            postorder_print(root, key);
+            free(key);
             break;
 
         case 0:

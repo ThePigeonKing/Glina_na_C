@@ -7,18 +7,32 @@
 #include "utils.h"
 #include "func.h"
 
+enum CODES graph_print(Node *root){
+    FILE *fl;
+    char *filename = malloc(40);
+    sprintf(filename, "saved.dot");
+    if (NULL != filename){
+        fl = fopen(filename, "w");
+    } else {
+        printf(ANSI_COLOR_YELLOW"Filename is something strange..\n"ANSI_COLOR_RESET);
 
+    }
+
+    return crit_error; //TODO
+}
 
 enum CODES create_info_file(Info **cell, FILE *file){
     enum CODES stat = hold;
 
     *cell = (Info *)malloc(sizeof(Info));
+    (*cell)->string = (char *)malloc(100 * sizeof(char));
 
     fscanf(file, "%[^\n]", (*cell)->string);
     fscanf(file, "%*c");
     
 
     fscanf(file, "%lf%lf", &(*cell)->num1, &(*cell)->num2);
+    fscanf(file, "%*c");
 
     return success;
 }
@@ -37,8 +51,10 @@ Node* initialize_file(char *key_to_init, FILE *file){
     fscanf(file, "%[^\n]", cell->info->string);
     fscanf(file, "%*c");
     fscanf(file, "%lf%lf", &(cell->info->num1), &(cell->info->num2));
+    fscanf(file, "%*c");
 
-    cell->key = key_to_init;
+    cell->key = (char *)calloc(strlen(key_to_init) + 1, sizeof(char));
+    strcat(cell->key, key_to_init);
     cell->left = NULL;
     cell->right = NULL;
 
@@ -83,7 +99,8 @@ Node* insert_file(Node *root, char *key, FILE *file){
             }
         }
 
-        new_node->key = key;
+        new_node->key = (char *)calloc(strlen(key) + 1, sizeof(char));
+        strcat(new_node->key, key);
         new_node->left = NULL;
         new_node->right = NULL;
         stat = create_info_file(&(new_node->info), file);
@@ -105,7 +122,7 @@ Node* insert_file(Node *root, char *key, FILE *file){
 
 Node* read_from_file(){  // основная функция для считывания дерева из файла
     printf(ANSI_COLOR_YELLOW"Enter name of file: "ANSI_COLOR_RESET);
-    char *filename = getLine(), *someline;
+    char *filename = getLine(), *someline = (char *)malloc(sizeof(char) * 80);
     Node *new_root = NULL;
 
     FILE *file;
@@ -113,6 +130,7 @@ Node* read_from_file(){  // основная функция для считыв�
 
     if (NULL == file){
         printf(ANSI_COLOR_YELLOW"Failed to open file!\n\n"ANSI_COLOR_RESET);
+        free(someline);
         return NULL;
     }
     while (fscanf(file, "%[^\n]", someline) > 0){
@@ -120,7 +138,10 @@ Node* read_from_file(){  // основная функция для считыв�
 
         new_root = insert_file(new_root, someline, file);
     }
+    printf(ANSI_COLOR_YELLOW"Success!\n"ANSI_COLOR_RESET);
     fclose(file);
+    free(someline);
+    free(filename);
 
     return new_root;
 }
