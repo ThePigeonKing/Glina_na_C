@@ -387,6 +387,7 @@ void print_commands(){
     printf(ANSI_COLOR_GREEN"4. Delete\n"ANSI_COLOR_RESET);
     printf(ANSI_COLOR_GREEN"5. Read from file\n"ANSI_COLOR_RESET);
     printf(ANSI_COLOR_GREEN"6. Postorder print with upper lim\n"ANSI_COLOR_RESET);
+    printf(ANSI_COLOR_GREEN"777. Save as graphics \n"ANSI_COLOR_RESET);
     printf(ANSI_COLOR_GREEN"0. Shut down\n"ANSI_COLOR_RESET);
 
     printf("\n");
@@ -517,6 +518,16 @@ void mainloop(){
             postorder_print(root, key);
             free(key);
             break;
+
+        case 777:   // save to .dot
+            stat = tree_print(root);
+            if (stat == success){
+                print_err("Saved to graph.dot file!");
+                break;
+            } else {
+                print_err("Failed to save!");
+                break;
+            }
 
         case 0:
             print_err("Shutting down...");

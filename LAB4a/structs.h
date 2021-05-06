@@ -17,8 +17,6 @@ typedef struct Node
 
 } Node;
 
-//! сделать изменение root внутри функции, без возврата в main
-//! сделать printf только в main
 
 enum CODES{   // статус коды для отлова ошибок
     fail,

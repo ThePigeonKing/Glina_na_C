@@ -7,18 +7,55 @@
 #include "utils.h"
 #include "func.h"
 
-enum CODES graph_print(Node *root){
+int convert_to_dot(Node *root, FILE *fl, int counter, int index){
+    
+    ++counter;
+    int local_index = counter;
+    if (NULL == fl){
+        printf(ANSI_COLOR_YELLOW"fl is NULL!\n"ANSI_COLOR_RESET);
+        return crit_error;
+    }
+    // создание ячейки
+    fprintf(fl, "\ta%03d [shape=record, label=\"%s\"];\n", counter, root->key);
+
+    // создание связи
+    if (index != -1){
+        fprintf(fl, "\ta%03d -> a%03d [color=grey];\n", index, counter);
+    }
+
+    if (NULL != root->left){
+        counter = convert_to_dot(root->left, fl, counter, local_index);
+    }
+    if (NULL != root->right){
+        counter = convert_to_dot(root->right, fl, counter, local_index);
+    }
+
+    return counter;    
+}
+
+enum CODES tree_print(Node *root){
+
+    if(NULL == root){
+        printf(ANSI_COLOR_YELLOW"Can't draw NULL!\n"ANSI_COLOR_RESET);
+        return hold;
+    }
     FILE *fl;
     char *filename = malloc(40);
-    sprintf(filename, "saved.dot");
+    sprintf(filename, "graph.dot");
     if (NULL != filename){
         fl = fopen(filename, "w");
     } else {
         printf(ANSI_COLOR_YELLOW"Filename is something strange..\n"ANSI_COLOR_RESET);
-
+        return crit_error;
     }
 
-    return crit_error; //TODO
+    free(filename);
+    fprintf(fl, "digraph {\n");
+    convert_to_dot(root, fl, 0, -1);
+    fprintf(fl, "}");
+    fclose(fl);
+
+    return success;
 }
 
 enum CODES create_info_file(Info **cell, FILE *file){

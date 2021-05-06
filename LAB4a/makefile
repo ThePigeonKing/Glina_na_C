@@ -14,3 +14,4 @@ adtest: main.c
 
 clean: *.out
 	rm *.out
+	rm *.dot
