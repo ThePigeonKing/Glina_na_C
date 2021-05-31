@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 
 #include "structs.h"
 #include "utils.h"
@@ -155,6 +156,15 @@ Node* insert_file(Node *root, char *key, FILE *file){
     return NULL;
 }
 
+char* get_rnd_string(int length) {
+	char* rng = malloc((length+1) * sizeof(char));
+	char array[60] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'};
+	for (int i = 0; i < length; ++i) {
+		rng[i] = array[rand()%52];
+	}
+	rng[length] = '\0';
+	return rng;
+}
 
 
 Node* read_from_file(){  // основная функция для считывания дерева из файла
@@ -163,6 +173,43 @@ Node* read_from_file(){  // основная функция для считыв�
     Node *new_root = NULL;
 
     FILE *file;
+    
+
+    if (strcmp(filename, "rng") == 0){  // со случайной генерацией
+        int rsp, amount, rng_num;
+        char *key, *rng_str;
+        printf("Enter amount of random generations: ");
+        rsp = scanf("%d", &amount);
+
+        if (rsp <= 0){
+            printf(ANSI_COLOR_YELLOW"Error in reading amount of generations!\n"ANSI_COLOR_RESET);
+            return NULL;
+        }
+
+        srand((unsigned)time(NULL));
+        file = fopen("rng_test", "w");
+        free(filename);
+        for (int i = 0; i < amount; ++i){   // 100500 итераций
+            fprintf(file, "%s\n", (rng_str = get_rnd_string(8)));
+            fprintf(file, "abc info\n");
+            fprintf(file, "123 321\n");
+            free(rng_str);
+        }
+        fclose(file);
+        
+        file = fopen("rng_test", "r");
+        while (fscanf(file, "%[^\n]", someline) > 0){
+            fscanf(file, "%*c");
+
+            new_root = insert_file(new_root, someline, file);
+        }
+        printf(ANSI_COLOR_YELLOW"Created tree with %d vertices!\n"ANSI_COLOR_RESET, amount);
+        fclose(file);
+        free(someline);
+
+        return new_root;
+    }
+
     file = fopen(filename, "r");
 
     if (NULL == file){

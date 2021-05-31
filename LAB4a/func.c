@@ -101,7 +101,7 @@ void print_node(Node *node, char* msg){    // вывод на экран node
 void postorder_print(Node *p, char *lim){  // вывод в обратном обходе + ограничение
     if (NULL != p){
         postorder_print(p->left, lim);
-        postorder_print(p->right, lim);
+        postorder_print(p->right, lim); //!ENA
         int compar = strcmp(lim, p->key);
         if (compar > 0){
             printf(ANSI_COLOR_RED"%s "ANSI_COLOR_RESET, p->key);
@@ -401,7 +401,7 @@ void mainloop(){
 
     while (1){
         print_commands();
-        printf("Choose one -->");
+        printf("Choose one --> ");
         rsp = scanf("%d", &command);
         if (rsp < 0){
             printf("EOF found!\n");

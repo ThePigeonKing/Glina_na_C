@@ -1,0 +1,13 @@
+digraph {
+	a001 [shape=record, label="ddd"];
+	a002 [shape=record, label="ad"];
+	a001 -> a002 [color=grey];
+	a003 [shape=record, label="aa"];
+	a002 -> a003 [color=grey];
+	a004 [shape=record, label="bd"];
+	a002 -> a004 [color=grey];
+	a005 [shape=record, label="de"];
+	a001 -> a005 [color=grey];
+	a006 [shape=record, label="df"];
+	a005 -> a006 [color=grey];
+}
