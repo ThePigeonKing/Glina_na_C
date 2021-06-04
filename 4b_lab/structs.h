@@ -1,10 +1,16 @@
 #ifndef LAB_STRUCTS
 #define LAB_STRUCTS
 
-typedef struct Info
+#define N 4
+
+typedef struct Node
 {
-    char* string;
-}Info;
+    int x;
+    int y;
+
+    char *info;
+}Node;
+
 
 typedef struct QNode
 {
@@ -13,23 +19,25 @@ typedef struct QNode
     struct QNode *SW;    // ЛН
     struct QNode *SE;    // ПН
 
-    int N;  // предел по количеству ячеек
+    struct QNode *prev; // предыдущий квадрат
+
     int x_cord;
     int y_cord;
 
-    int children;   // количество элементов "ниже"
+    int exists;   // количество элементов "ниже"
+    int subdivided; // есть ли ниже дерево
 
-    Info *info; // информация
+    Node **array;
 }QNode;
 
-enum CODE   // статус коды для удобства
+typedef enum CODE   // статус коды для удобства
 {
     crit_err,
     fail,
     hold,
     success
-};
+}CODE;
 
-
+#define crtnew(t) ((t*)calloc(1, sizeof(t)))
 
 #endif
